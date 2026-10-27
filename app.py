@@ -168,8 +168,11 @@ def receive_report():
         return jsonify({"success": False, "message": "Count must be a valid number"}), 400
     if count > 50:
         count = 50
-    if not (link.startswith("https://facebook.com") or link.startswith("https://facebook.com")):
+        
+    # 🔥 التعديل السحري والمرن هنا: دعم جميع صيغ روابط فيسبوك لمشاركة الجوال
+    if "facebook.com" not in link.lower():
         return jsonify({"success": False, "message": "Invalid Facebook link"}), 400
+
     task_id = str(int(time.time()))
     automation_reports[task_id] = {
         "status": "Starting",

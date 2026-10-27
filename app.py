@@ -107,16 +107,13 @@ HTML_INTERFACE = """
 </html>
 """
 
-# دالة الأتمتة المطورة والمستقرة والسريعة بدون بروكسيات
+# دالة الأتمتة المباشرة والسريعة عبر شبكة السيرفر
 def run_automation_in_background(task_id, link, count):
     global automation_reports
     
     session = requests.Session()
-    # استخدام هيدرز ممتازة لمحاكاة متصفح حقيقي من الجوال والكمبيوتر
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9,ar;q=0.8"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     })
 
     successful_attempts = 0
@@ -124,23 +121,16 @@ def run_automation_in_background(task_id, link, count):
 
     for i in range(count):
         try:
-            # إرسال الطلب مباشرة عبر اتصال سيرفر ريندر القوي
             response = session.get(link, timeout=7)
-            
-            # أي استجابة ناجحة (سواء 200 أو حتى توجيه) تعتبر زيارة ناجحة للرابط
-            if response.status_code in:
+            if response.status_code == 200:
                 successful_attempts += 1
             else:
                 failed_attempts += 1
-                
-            # فاصل زمني بسيط جداً (ثلاثة أجزاء من الثانية) لضمان السرعة والانتظام
             time.sleep(0.3)
-            
         except Exception:
             failed_attempts += 1
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-        # تحديث التقرير اللحظي في واجهة المستخدم فوراً
         automation_reports[task_id] = {
             "status": "Running",
             "target": link,
@@ -150,7 +140,6 @@ def run_automation_in_background(task_id, link, count):
             "failed": failed_attempts
         }
 
-    # اكتمال المهمة بالكامل
     automation_reports[task_id]["status"] = "Completed"
 
 @app.get("/")

@@ -1,2 +1,3 @@
-flask
-gunicor
+Flask==3.0.2
+requests==2.31.0
+

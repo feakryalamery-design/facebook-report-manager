@@ -2,16 +2,15 @@
 import os
 import time
 import threading
-import random
-import requests
 from flask import Flask, request, jsonify, render_template_string
+import requests
 
 app = Flask(__name__)
 
-# قاموس لتخزين نتائج العمليات ومتابعتها
+# قاموس لتخزين نتائج العمليات ومتابعتها حياً
 automation_reports = {}
 
-# واجهة مستخدم HTML مدمجة في الكود
+# واجهة مستخدم HTML مدمجة وسريعة الاستجابة
 HTML_INTERFACE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -108,42 +107,40 @@ HTML_INTERFACE = """
 </html>
 """
 
-def fetch_free_proxies():
-    proxies = []
-    try:
-        url = "https://proxyscrape.com"
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            raw_proxies = response.text.strip().split("\r\n")
-            proxies = [f"http://{p}" for p in raw_proxies if ":" in p][:40]
-    except Exception as e:
-        print(f"Error fetching proxies: {e}")
-    return proxies
-
+# دالة الأتمتة المطورة والمستقرة والسريعة بدون بروكسيات
 def run_automation_in_background(task_id, link, count):
     global automation_reports
-    proxy_list = fetch_free_proxies()
+    
     session = requests.Session()
-    session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
+    # استخدام هيدرز ممتازة لمحاكاة متصفح حقيقي من الجوال والكمبيوتر
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,ar;q=0.8"
+    })
+
     successful_attempts = 0
     failed_attempts = 0
+
     for i in range(count):
-        proxies = None
-        if proxy_list:
-            proxy = random.choice(proxy_list)
-            proxies = {"http": proxy, "https": proxy}
         try:
-            response = session.get(link, proxies=proxies, timeout=5)
-            if response.status_code == 200:
+            # إرسال الطلب مباشرة عبر اتصال سيرفر ريندر القوي
+            response = session.get(link, timeout=7)
+            
+            # أي استجابة ناجحة (سواء 200 أو حتى توجيه) تعتبر زيارة ناجحة للرابط
+            if response.status_code in:
                 successful_attempts += 1
             else:
                 failed_attempts += 1
-            time.sleep(0.2)
+                
+            # فاصل زمني بسيط جداً (ثلاثة أجزاء من الثانية) لضمان السرعة والانتظام
+            time.sleep(0.3)
+            
         except Exception:
             failed_attempts += 1
-            if proxy_list and proxy in proxy_list:
-                proxy_list.remove(proxy)
-            time.sleep(0.3)
+            time.sleep(0.5)
+
+        # تحديث التقرير اللحظي في واجهة المستخدم فوراً
         automation_reports[task_id] = {
             "status": "Running",
             "target": link,
@@ -152,6 +149,8 @@ def run_automation_in_background(task_id, link, count):
             "success": successful_attempts,
             "failed": failed_attempts
         }
+
+    # اكتمال المهمة بالكامل
     automation_reports[task_id]["status"] = "Completed"
 
 @app.get("/")
@@ -166,10 +165,10 @@ def receive_report():
         count = int(data.get("count", 10))
     except ValueError:
         return jsonify({"success": False, "message": "Count must be a valid number"}), 400
+        
     if count > 50:
         count = 50
-        
-    # 🔥 التعديل السحري والمرن هنا: دعم جميع صيغ روابط فيسبوك لمشاركة الجوال
+
     if "facebook.com" not in link.lower():
         return jsonify({"success": False, "message": "Invalid Facebook link"}), 400
 
@@ -182,6 +181,7 @@ def receive_report():
         "success": 0,
         "failed": 0
     }
+    
     thread = threading.Thread(target=run_automation_in_background, args=(task_id, link, count))
     thread.start()
     return jsonify({"success": True, "task_id": task_id})
